@@ -213,20 +213,7 @@
         table.appendChild(row);
     }
 
-    // Učitavanje rang liste iz localStorage prilikom učitavanja stranice
-    function loadScores() {
-        const scores = JSON.parse(localStorage.getItem('scores')) || [];
-        displayScores(scores);
-    }
-
-    function displayScores(scores) {
-        scoreboardBody.innerHTML = '';
-        scores.forEach((score, index) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `<td>${index + 1}</td><td>${score.name}</td><td>${score.grade}</td><td>${score.correctAnswers}</td>`;
-            scoreboardBody.appendChild(row);
-        });
-    }
+    
 
     function startGame() {
         name = document.getElementById('name').value;
@@ -296,14 +283,50 @@
         highlightedCells.forEach(cell => cell.classList.remove('highlight'));
     }
 
-    function updateScoreboard() {
-        const scores = JSON.parse(localStorage.getItem('scores')) || [];
-        scores.push({ name, grade, correctAnswers });
-        scores.sort((a, b) => b.correctAnswers - a.correctAnswers);
-        if (scores.length > 10) scores.pop(); // Keep only top 10 scores
-        localStorage.setItem('scores', JSON.stringify(scores));
-        displayScores(scores);
-    }
+    // Funkcija za čuvanje rezultata u Firebase-u
+function updateScoreboard() {
+    const scoresRef = database.ref('scores');
+    const newScore = {
+        name: name,
+        grade: grade,
+        correctAnswers: correctAnswers
+    };
+    
+    // Dodaj novi rezultat na Firebase
+    scoresRef.push(newScore).then(() => {
+        loadScores(); // Učitavanje rang liste nakon što se novi rezultat sačuva
+    }).catch(error => {
+        console.error("Greška prilikom čuvanja rezultata:", error);
+    });
+}
+
+// Funkcija za učitavanje rang liste sa Firebase-a
+function loadScores() {
+    const scoresRef = database.ref('scores');
+
+    // Jednokratno učitavanje podataka iz Firebase baze
+    scoresRef.once('value').then(snapshot => {
+        const scores = snapshot.val() || {};
+        displayScores(scores); // Prikazivanje rezultata na tabeli
+    }).catch(error => {
+        console.error("Greška prilikom učitavanja rang liste:", error);
+    });
+}
+
+// Funkcija za prikazivanje rezultata na rang listi
+function displayScores(scores) {
+    scoreboardBody.innerHTML = ''; // Brisanje trenutnog sadržaja tabele
+
+    // Sortiramo rezultate po broju tačnih odgovora (najviši prvo)
+    const sortedScores = Object.values(scores).sort((a, b) => b.correctAnswers - a.correctAnswers);
+
+    // Prikazujemo top 10 rezultata
+    sortedScores.slice(0, 10).forEach((score, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${index + 1}</td><td>${score.name}</td><td>${score.grade}</td><td>${score.correctAnswers}</td>`;
+        scoreboardBody.appendChild(row);
+    });
+}
 
     window.onload = loadScores;
 </script>
