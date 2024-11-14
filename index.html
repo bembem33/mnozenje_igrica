@@ -139,29 +139,7 @@
 
 
     </style>
-
-<!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script>
-        // Firebase konfiguracija
-        const firebaseConfig = {
-            apiKey: "AIzaSyD0rhxbTPgznDvlWkJFkpkXDFXCiR-TJtU",
-            authDomain: "mnozenjeigrica.firebaseapp.com",
-            databaseURL: "https://mnozenjeigrica-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "mnozenjeigrica",
-            storageBucket: "mnozenjeigrica.firebasestorage.app",
-            messagingSenderId: "249351123551",
-            appId: "1:249351123551:web:acdb178650d28dd0bca1ea"
-        };
-
-        // Inicijalizacija Firebase-a
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-    </script>
-    
 </head>
-    
 <body>
 
 <h1>Играjмо игрицу </br> -множење-</h1>
@@ -183,7 +161,7 @@
             <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
         </tr>
     </thead>
-    <tbody id="tableBody">
+    <tbody>
         <!-- Redovi se generišu pomoću JavaScript-a -->
     </tbody>
 </table>
@@ -210,130 +188,146 @@
 <script>
     const questionElement = document.getElementById('question');
     const feedbackElement = document.getElementById('feedback');
-    const table = document.getElementById('multiplicationTable');
-    const tableBody = document.getElementById('tableBody');
+    const table = document.getElementById('multiplicationTable').querySelector('tbody');
     const scoreboardBody = document.getElementById('scoreboardBody');
     const timerElement = document.getElementById('timer');
     let targetRow, targetCol, timer, correctAnswers = 0, incorrectAnswers = 0;
     let name, grade;
 
     // Generišemo tabelu množenja
-    for (let row = 1; row <= 10; row++) {
-        const tableRow = document.createElement('tr');
-        for (let col = 0; col <= 10; col++) {
+    for (let i = 1; i <= 10; i++) {
+        const row = document.createElement('tr');
+        const th = document.createElement('th');
+        th.textContent = i;
+        th.dataset.row = i;
+        row.appendChild(th);
+
+        for (let j = 1; j <= 10; j++) {
             const cell = document.createElement('td');
-            if (row === 0 || col === 0) {
-                cell.textContent = '';
-            } else {
-                cell.textContent = row * col;
-                cell.addEventListener('click', () => checkAnswer(row, col, cell));  // Dodajemo klik funkcionalnost na ćelije
-            }
-            tableRow.appendChild(cell);
+            cell.textContent = i * j;
+            cell.classList.add('result');
+            cell.dataset.row = i;
+            cell.dataset.col = j;
+            row.appendChild(cell);
         }
-        tableBody.appendChild(tableRow);
+        table.appendChild(row);
     }
 
-    // Start igre
-    function startGame() {
-        name = document.getElementById('name').value;
-        grade = document.getElementById('grade').value;
-
-        if (!name || !grade) {
-            alert('Молимо унесите име и разред!');
-            return;
-        }
-
-        document.getElementById('inputSection').style.display = 'none';
-        correctAnswers = 0;
-        incorrectAnswers = 0;
-
-        startTimer(60);
-        nextQuestion();
-    }
-
-    // Početni brojač
-    function startTimer(seconds) {
-        let timeLeft = seconds;
-        timerElement.textContent = `Време: ${timeLeft}s`;
-
-        timer = setInterval(() => {
-            timeLeft--;
-            timerElement.textContent = `Време: ${timeLeft}s`;
-            if (timeLeft <= 0) {
-                clearInterval(timer);
-                endGame();
-            }
-        }, 1000);
-    }
-
-    // Generisanje sledećeg pitanja
-    function nextQuestion() {
-        const randomRow = Math.floor(Math.random() * 10) + 1;
-        const randomCol = Math.floor(Math.random() * 10) + 1;
-
-        targetRow = randomRow;
-        targetCol = randomCol;
-        questionElement.textContent = `Колико је ${targetRow} × ${targetCol}?`;
-    }
-
-    // Provera odgovora
-    function checkAnswer(row, col, cell) {
-        if (row === targetRow && col === targetCol) {
-            correctAnswers++;
-            feedbackElement.textContent = 'Тачно!';  
-            cell.classList.add('highlight');
-        } else {
-            incorrectAnswers++;
-            feedbackElement.textContent = 'Неточно!'; 
-            cell.classList.add('darkened');
-        }
-
-        setTimeout(() => {
-            feedbackElement.textContent = '';
-            cell.classList.remove('highlight', 'darkened');
-            nextQuestion();
-        }, 1000);
-    }
-
-    // Zatvaranje igre
-    function endGame() {
-        alert('Игра је завршена!');
-        updateScoreboard();
-        resetGame();
-    }
-
-    // Ažuriranje rezultata na listi
-    function updateScoreboard() {
-        const scoresRef = database.ref('scores');
-        scoresRef.push({
-            name: name,
-            grade: grade,
-            correctAnswers: correctAnswers
-        }).then(() => {
-            loadScores();
-        });
-    }
-
-    // Učitavanje rezultata iz baze
+    // Učitavanje rang liste iz localStorage prilikom učitavanja stranice
     function loadScores() {
-        const scoresRef = database.ref('scores');
-        scoresRef.once('value', snapshot => {
-            const scores = snapshot.val() || [];
-            displayScores(scores);
-        });
+        const scores = JSON.parse(localStorage.getItem('scores')) || [];
+        displayScores(scores);
     }
 
-    // Prikazivanje rezultata u tabeli
     function displayScores(scores) {
         scoreboardBody.innerHTML = '';
-        const sortedScores = Object.values(scores).sort((a, b) => b.correctAnswers - a.correctAnswers);
-        sortedScores.forEach((score, index) => {
+        scores.forEach((score, index) => {
             const row = document.createElement('tr');
             row.innerHTML = `<td>${index + 1}</td><td>${score.name}</td><td>${score.grade}</td><td>${score.correctAnswers}</td>`;
             scoreboardBody.appendChild(row);
         });
     }
+
+    function startGame() {
+        name = document.getElementById('name').value;
+        grade = document.getElementById('grade').value;
+        if (!name || !grade) {
+            alert('Молимо унесите и име и разред.');
+            return;
+        }
+        correctAnswers = 0;
+        incorrectAnswers = 0;
+        startTimer();
+        generateTask();
+    }
+
+    function startTimer() {
+        let timeLeft = 60;
+        timerElement.textContent = `Преостало време: ${timeLeft} секунди`;
+        timer = setInterval(() => {
+            timeLeft--;
+            timerElement.textContent = `Преостало време: ${timeLeft} секунди`;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                updateScoreboard();
+                alert('Време је истекло!');
+            }
+        }, 1000);
+    }
+
+    function generateTask() {
+        targetRow = Math.floor(Math.random() * 10) + 1;
+        targetCol = Math.floor(Math.random() * 10) + 1;
+        questionElement.textContent = `Колико је ${targetRow} x ${targetCol}?`;
+        clearHighlights();
+        feedbackElement.textContent = '';
+    }
+
+    table.addEventListener('click', function (event) {
+        const cell = event.target;
+        if (cell.tagName === 'TD') {
+            handleSelection(parseInt(cell.dataset.row), parseInt(cell.dataset.col));
+        }
+    });
+
+    function handleSelection(row, col) {
+        clearHighlights();
+        highlightRowAndCol(row, col);
+        if ((row === targetRow && col === targetCol) || (row === targetCol && col === targetRow)) {
+            document.querySelector(`td[data-row="${row}"][data-col="${col}"]`).classList.add('darkened');
+            feedbackElement.innerHTML = `<span class="smiley">Тачно! 😊</span>`;
+            correctAnswers++;
+            setTimeout(generateTask, 500);
+        } else {
+            feedbackElement.innerHTML = `<span class="sad">Покушај поново 😟</span>`;
+            incorrectAnswers++;
+        }
+    }
+
+    function highlightRowAndCol(row, col) {
+        const rowCells = document.querySelectorAll(`td[data-row="${row}"]`);
+        const colCells = document.querySelectorAll(`td[data-col="${col}"]`);
+        rowCells.forEach(cell => cell.classList.add('highlight'));
+        colCells.forEach(cell => cell.classList.add('highlight'));
+    }
+
+    function clearHighlights() {
+        const highlightedCells = document.querySelectorAll('.highlight');
+        highlightedCells.forEach(cell => cell.classList.remove('highlight'));
+    }
+
+    function updateScoreboard() {
+        const scores = JSON.parse(localStorage.getItem('scores')) || [];
+        scores.push({ name, grade, correctAnswers });
+        scores.sort((a, b) => b.correctAnswers - a.correctAnswers);
+        if (scores.length > 10) scores.pop(); // Keep only top 10 scores
+        localStorage.setItem('scores', JSON.stringify(scores));
+        displayScores(scores);
+    }
+
+    window.onload = loadScores;
 </script>
 
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyD0rhxbTPgznDvlWkJFkpkXDFXCiR-TJtU",
+    authDomain: "mnozenjeigrica.firebaseapp.com",
+    databaseURL: "https://mnozenjeigrica-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "mnozenjeigrica",
+    storageBucket: "mnozenjeigrica.firebasestorage.app",
+    messagingSenderId: "249351123551",
+    appId: "1:249351123551:web:acdb178650d28dd0bca1ea"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+</script>
+    
 </body>
 </html>
