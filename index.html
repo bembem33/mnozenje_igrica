@@ -136,6 +136,8 @@
             font-size: 16px;
             gap: 10px;
         }
+
+
     </style>
 
 <!-- Firebase SDK -->
@@ -157,14 +159,14 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
     </script>
+    
 </head>
+    
 <body>
 
-<!-- Sadržaj stranice -->
 <h1>Играjмо игрицу </br> -множење-</h1>
 <div class="message">Унесите своје име и разред, кликните на дугме "ПОЧНИ ИГРУ".</br>Имаш 60 секунди да сaкупиш што већи број поена, само 10 најболјих се приказује на листи! 
     Имаш безброј покушаја да будеш на листи најбољих.</br></br><b>СРЕЋНО!</b></div>
-
 <div id="inputSection">
     <label for="name">Унеси своје име и презиме: 
     <input type="text" id="name" required></br>
@@ -172,8 +174,6 @@
     <input type="text" id="grade" required></br>
     <button onclick="startGame()">Почни игру</button>
 </div>
-
-<!-- Tabela za množenje -->
 <div class="question" id="question">Колико је 1 x 1?</div>
 <table id="multiplicationTable">
     <thead>
@@ -187,7 +187,6 @@
         <!-- Redovi se generišu pomoću JavaScript-a -->
     </tbody>
 </table>
-
 <div class="feedback" id="feedback"></div>
 <div id="timer"></div>
 
@@ -207,7 +206,7 @@
 </table>
 
 <div class="message">Да бисте поново започели игру, освежите страницу!</b></div>
-
+    
 <script>
     const questionElement = document.getElementById('question');
     const feedbackElement = document.getElementById('feedback');
@@ -224,93 +223,127 @@
         th.textContent = i;
         th.dataset.row = i;
         row.appendChild(th);
+
         for (let j = 1; j <= 10; j++) {
-            const td = document.createElement('td');
-            td.textContent = i * j;
-            td.dataset.row = i;
-            td.dataset.col = j;
-            td.onclick = () => checkAnswer(td);
-            row.appendChild(td);
+            const cell = document.createElement('td');
+            cell.textContent = i * j;
+            cell.classList.add('result');
+            cell.dataset.row = i;
+            cell.dataset.col = j;
+            row.appendChild(cell);
         }
         table.appendChild(row);
     }
 
-    function checkAnswer(cell) {
-        const row = parseInt(cell.dataset.row);
-        const col = parseInt(cell.dataset.col);
-        const answer = row * col;
-        const selectedAnswer = parseInt(prompt(`Колико је ${row} x ${col}?`));
-
-        if (selectedAnswer === answer) {
-            cell.classList.add('darkened');
-            correctAnswers++;
-            feedbackElement.textContent = 'Тачан одговор!';
-            feedbackElement.classList.add('smiley');
-            setTimeout(() => {
-                feedbackElement.textContent = '';
-                feedbackElement.classList.remove('smiley');
-            }, 1000);
-        } else {
-            cell.classList.add('highlight');
-            incorrectAnswers++;
-            feedbackElement.textContent = 'Нетачан одговор!';
-            feedbackElement.classList.add('sad');
-            setTimeout(() => {
-                feedbackElement.textContent = '';
-                feedbackElement.classList.remove('sad');
-            }, 1000);
-        }
-
-        updateScoreboard();
-    }
-
+    // Učitavanje rang liste iz localStorage prilikom učitavanja stranice
     function updateScoreboard() {
+    const scoresRef = database.ref('scores');
+    scoresRef.push({
+        name: name,
+        grade: grade,
+        correctAnswers: correctAnswers
+    }).then(() => {
+        loadScores();
+    });
+}
+
+    function loadScores() {
+    const scoresRef = database.ref('scores');
+    scoresRef.once('value', snapshot => {
+        const scores = snapshot.val() || [];
+        displayScores(scores);
+    });
+}
+
+function displayScores(scores) {
+    scoreboardBody.innerHTML = '';
+    const sortedScores = Object.values(scores).sort((a, b) => b.correctAnswers - a.correctAnswers);
+    sortedScores.forEach((score, index) => {
         const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${correctAnswers + incorrectAnswers}</td>
-            <td>${name}</td>
-            <td>${grade}</td>
-            <td>${correctAnswers}</td>
-        `;
+        row.innerHTML = `<td>${index + 1}</td><td>${score.name}</td><td>${score.grade}</td><td>${score.correctAnswers}</td>`;
         scoreboardBody.appendChild(row);
-
-        // Save to Firebase
-        saveToFirebase(name, grade, correctAnswers);
-    }
-
-    function saveToFirebase(name, grade, correctAnswers) {
-        const newScoreRef = database.ref('scores').push();
-        newScoreRef.set({
-            name: name,
-            grade: grade,
-            correctAnswers: correctAnswers
-        });
-    }
+    });
+}
 
     function startGame() {
         name = document.getElementById('name').value;
         grade = document.getElementById('grade').value;
-
-        if (name && grade) {
-            correctAnswers = 0;
-            incorrectAnswers = 0;
-            timer = 60; // 60 seconds timer
-            startTimer();
-        } else {
-            alert('Молимо вас, унесите своје име и разред!');
+        if (!name || !grade) {
+            alert('Молимо унесите и име и разред.');
+            return;
         }
+        correctAnswers = 0;
+        incorrectAnswers = 0;
+        startTimer();
+        generateTask();
     }
 
     function startTimer() {
-        const interval = setInterval(() => {
-            timer--;
-            timerElement.textContent = `Време: ${timer} секунди`;
-            if (timer <= 0) {
-                clearInterval(interval);
-                feedbackElement.textContent = 'Игра је завршена!';
+        let timeLeft = 60;
+        timerElement.textContent = `Преостало време: ${timeLeft} секунди`;
+        timer = setInterval(() => {
+            timeLeft--;
+            timerElement.textContent = `Преостало време: ${timeLeft} секунди`;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                updateScoreboard();
+                alert('Време је истекло!');
             }
         }, 1000);
     }
+
+    function generateTask() {
+        targetRow = Math.floor(Math.random() * 10) + 1;
+        targetCol = Math.floor(Math.random() * 10) + 1;
+        questionElement.textContent = `Колико је ${targetRow} x ${targetCol}?`;
+        clearHighlights();
+        feedbackElement.textContent = '';
+    }
+
+    table.addEventListener('click', function (event) {
+        const cell = event.target;
+        if (cell.tagName === 'TD') {
+            handleSelection(parseInt(cell.dataset.row), parseInt(cell.dataset.col));
+        }
+    });
+
+    function handleSelection(row, col) {
+        clearHighlights();
+        highlightRowAndCol(row, col);
+        if ((row === targetRow && col === targetCol) || (row === targetCol && col === targetRow)) {
+            document.querySelector(`td[data-row="${row}"][data-col="${col}"]`).classList.add('darkened');
+            feedbackElement.innerHTML = `<span class="smiley">Тачно! 😊</span>`;
+            correctAnswers++;
+            setTimeout(generateTask, 500);
+        } else {
+            feedbackElement.innerHTML = `<span class="sad">Покушај поново 😟</span>`;
+            incorrectAnswers++;
+        }
+    }
+
+    function highlightRowAndCol(row, col) {
+        const rowCells = document.querySelectorAll(`td[data-row="${row}"]`);
+        const colCells = document.querySelectorAll(`td[data-col="${col}"]`);
+        rowCells.forEach(cell => cell.classList.add('highlight'));
+        colCells.forEach(cell => cell.classList.add('highlight'));
+    }
+
+    function clearHighlights() {
+        const highlightedCells = document.querySelectorAll('.highlight');
+        highlightedCells.forEach(cell => cell.classList.remove('highlight'));
+    }
+
+    function updateScoreboard() {
+        const scores = JSON.parse(localStorage.getItem('scores')) || [];
+        scores.push({ name, grade, correctAnswers });
+        scores.sort((a, b) => b.correctAnswers - a.correctAnswers);
+        if (scores.length > 10) scores.pop(); // Keep only top 10 scores
+        localStorage.setItem('scores', JSON.stringify(scores));
+        displayScores(scores);
+    }
+
+    window.onload = loadScores;
 </script>
+
 </body>
 </html>
