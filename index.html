@@ -142,6 +142,27 @@
 </head>
 <body>
 
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyD0rhxbTPgznDvlWkJFkpkXDFXCiR-TJtU",
+    authDomain: "mnozenjeigrica.firebaseapp.com",
+    databaseURL: "https://mnozenjeigrica-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "mnozenjeigrica",
+    storageBucket: "mnozenjeigrica.firebasestorage.app",
+    messagingSenderId: "249351123551",
+    appId: "1:249351123551:web:acdb178650d28dd0bca1ea"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+</script>
+    
 <h1>Играjмо игрицу </br> -множење-</h1>
 <div class="message">Унесите своје име и разред, кликните на дугме "ПОЧНИ ИГРУ".</br>Имаш 60 секунди да сaкупиш што већи број поена, само 10 најболјих се приказује на листи! 
     Имаш безброј покушаја да будеш на листи најбољих.</br></br><b>СРЕЋНО!</b></div>
@@ -308,72 +329,5 @@
     window.onload = loadScores;
 </script>
 
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyD0rhxbTPgznDvlWkJFkpkXDFXCiR-TJtU",
-    authDomain: "mnozenjeigrica.firebaseapp.com",
-    databaseURL: "https://mnozenjeigrica-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "mnozenjeigrica",
-    storageBucket: "mnozenjeigrica.firebasestorage.app",
-    messagingSenderId: "249351123551",
-    appId: "1:249351123551:web:acdb178650d28dd0bca1ea"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-
-    // Funkcija za čuvanje rezultata u Firebase-u
-function updateScoreboard() {
-    const scoresRef = database.ref('scores');
-    const newScore = {
-        name: name,
-        grade: grade,
-        correctAnswers: correctAnswers
-    };
-    
-    // Dodaj novi rezultat na Firebase
-    scoresRef.push(newScore).then(() => {
-        loadScores(); // Učitavanje rang liste nakon što se novi rezultat sačuva
-    }).catch(error => {
-        console.error("Greška prilikom čuvanja rezultata:", error);
-    });
-}
-
-// Funkcija za učitavanje rang liste sa Firebase-a
-function loadScores() {
-    const scoresRef = database.ref('scores');
-
-    // Jednokratno učitavanje podataka iz Firebase baze
-    scoresRef.once('value').then(snapshot => {
-        const scores = snapshot.val() || {};
-        displayScores(scores); // Prikazivanje rezultata na tabeli
-    }).catch(error => {
-        console.error("Greška prilikom učitavanja rang liste:", error);
-    });
-}
-
-// Funkcija za prikazivanje rezultata na rang listi
-function displayScores(scores) {
-    scoreboardBody.innerHTML = ''; // Brisanje trenutnog sadržaja tabele
-
-    // Sortiramo rezultate po broju tačnih odgovora (najviši prvo)
-    const sortedScores = Object.values(scores).sort((a, b) => b.correctAnswers - a.correctAnswers);
-
-    // Prikazujemo top 10 rezultata
-    sortedScores.slice(0, 10).forEach((score, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${index + 1}</td><td>${score.name}</td><td>${score.grade}</td><td>${score.correctAnswers}</td>`;
-        scoreboardBody.appendChild(row);
-    });
-}
-
-</script>
-    
 </body>
 </html>
