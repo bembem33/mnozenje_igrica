@@ -235,115 +235,81 @@
         table.appendChild(row);
     }
 
-    // Učitavanje rang liste iz localStorage prilikom učitavanja stranice
-    function updateScoreboard() {
-    const scoresRef = database.ref('scores');
-    scoresRef.push({
-        name: name,
-        grade: grade,
-        correctAnswers: correctAnswers
-    }).then(() => {
-        loadScores();
-    });
-}
-
-    function loadScores() {
-    const scoresRef = database.ref('scores');
-    scoresRef.once('value', snapshot => {
-        const scores = snapshot.val() || [];
-        displayScores(scores);
-    });
-}
-
-function displayScores(scores) {
-    scoreboardBody.innerHTML = '';
-    const sortedScores = Object.values(scores).sort((a, b) => b.correctAnswers - a.correctAnswers);
-    sortedScores.forEach((score, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${index + 1}</td><td>${score.name}</td><td>${score.grade}</td><td>${score.correctAnswers}</td>`;
-        scoreboardBody.appendChild(row);
-    });
-}
-
     function startGame() {
         name = document.getElementById('name').value;
         grade = document.getElementById('grade').value;
+
         if (!name || !grade) {
-            alert('Молимо унесите и име и разред.');
+            alert('Молимо унесите име и разред!');
             return;
         }
+
+        document.getElementById('inputSection').style.display = 'none';
         correctAnswers = 0;
         incorrectAnswers = 0;
-        startTimer();
-        generateTask();
+
+        startTimer(60); // Početak brojača vremena
+        nextQuestion();
     }
 
-    function startTimer() {
-        let timeLeft = 60;
-        timerElement.textContent = `Преостало време: ${timeLeft} секунди`;
+    function startTimer(seconds) {
+        let timeLeft = seconds;
+        timerElement.textContent = `Време: ${timeLeft}s`;
+
         timer = setInterval(() => {
             timeLeft--;
-            timerElement.textContent = `Преостало време: ${timeLeft} секунди`;
+            timerElement.textContent = `Време: ${timeLeft}s`;
             if (timeLeft <= 0) {
                 clearInterval(timer);
-                updateScoreboard();
-                alert('Време је истекло!');
+                endGame();
             }
         }, 1000);
     }
 
-    function generateTask() {
-        targetRow = Math.floor(Math.random() * 10) + 1;
-        targetCol = Math.floor(Math.random() * 10) + 1;
-        questionElement.textContent = `Колико је ${targetRow} x ${targetCol}?`;
-        clearHighlights();
-        feedbackElement.textContent = '';
+    function nextQuestion() {
+        const randomRow = Math.floor(Math.random() * 10) + 1;
+        const randomCol = Math.floor(Math.random() * 10) + 1;
+
+        targetRow = randomRow;
+        targetCol = randomCol;
+        questionElement.textContent = `Колико је ${targetRow} × ${targetCol}?`;
     }
 
-    table.addEventListener('click', function (event) {
-        const cell = event.target;
-        if (cell.tagName === 'TD') {
-            handleSelection(parseInt(cell.dataset.row), parseInt(cell.dataset.col));
-        }
-    });
-
-    function handleSelection(row, col) {
-        clearHighlights();
-        highlightRowAndCol(row, col);
-        if ((row === targetRow && col === targetCol) || (row === targetCol && col === targetRow)) {
-            document.querySelector(`td[data-row="${row}"][data-col="${col}"]`).classList.add('darkened');
-            feedbackElement.innerHTML = `<span class="smiley">Тачно! 😊</span>`;
-            correctAnswers++;
-            setTimeout(generateTask, 500);
-        } else {
-            feedbackElement.innerHTML = `<span class="sad">Покушај поново 😟</span>`;
-            incorrectAnswers++;
-        }
-    }
-
-    function highlightRowAndCol(row, col) {
-        const rowCells = document.querySelectorAll(`td[data-row="${row}"]`);
-        const colCells = document.querySelectorAll(`td[data-col="${col}"]`);
-        rowCells.forEach(cell => cell.classList.add('highlight'));
-        colCells.forEach(cell => cell.classList.add('highlight'));
-    }
-
-    function clearHighlights() {
-        const highlightedCells = document.querySelectorAll('.highlight');
-        highlightedCells.forEach(cell => cell.classList.remove('highlight'));
+    function endGame() {
+        alert('Игра је завршена!');
+        updateScoreboard();
+        resetGame();
     }
 
     function updateScoreboard() {
-        const scores = JSON.parse(localStorage.getItem('scores')) || [];
-        scores.push({ name, grade, correctAnswers });
-        scores.sort((a, b) => b.correctAnswers - a.correctAnswers);
-        if (scores.length > 10) scores.pop(); // Keep only top 10 scores
-        localStorage.setItem('scores', JSON.stringify(scores));
-        displayScores(scores);
+        const scoresRef = database.ref('scores');
+        scoresRef.push({
+            name: name,
+            grade: grade,
+            correctAnswers: correctAnswers
+        }).then(() => {
+            loadScores();
+        });
     }
 
-    window.onload = loadScores;
-</script>
+    function loadScores() {
+        const scoresRef = database.ref('scores');
+        scoresRef.once('value', snapshot => {
+            const scores = snapshot.val() || [];
+            displayScores(scores);
+        });
+    }
 
+    function displayScores(scores) {
+        scoreboardBody.innerHTML = '';
+        const sortedScores = Object.values(scores).sort((a, b) => b.correctAnswers - a.correctAnswers);
+        sortedScores.forEach((score, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${index + 1}</td><td>${score.name}</td><td>${score.grade}</td><td>${score.correctAnswers}</td>`;
+            scoreboardBody.appendChild(row);
+        });
+    }
+</script>
+    
 </body>
 </html>
