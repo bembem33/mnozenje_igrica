@@ -161,9 +161,11 @@
 
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
+
+  // Connect to Firebase Realtime Database
   const database = firebase.database();
-  const scoresRef = database.ref('scores');  
-</script>
+  const scoresRef = database.ref('scores');
+
     
 <h1>Играjмо игрицу </br> -множење-</h1>
 <div class="message">Унесите своје име и разред, кликните на дугме "ПОЧНИ ИГРУ".</br>Имаш 60 секунди да сaкупиш што већи број поена, само 10 најболјих се приказује на листи! 
@@ -236,7 +238,22 @@
         table.appendChild(row);
     }
 
-    // Učitavanje rang liste
+    // Učitavanje rang liste iz localStorage prilikom učitavanja stranice
+    function loadScores() {
+        const scores = JSON.parse(localStorage.getItem('scores')) || [];
+        displayScores(scores);
+    }
+
+    function displayScores(scores) {
+        scoreboardBody.innerHTML = '';
+        scores.forEach((score, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${index + 1}</td><td>${score.name}</td><td>${score.grade}</td><td>${score.correctAnswers}</td>`;
+            scoreboardBody.appendChild(row);
+        });
+    }
+
+    // Update scoreboard using Firebase
     function updateScoreboard() {
       scoresRef.push({
         name: name,
@@ -261,6 +278,7 @@
         });
       }
     });
+
 
     function startGame() {
         name = document.getElementById('name').value;
