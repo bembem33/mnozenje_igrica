@@ -138,11 +138,11 @@
         }
     </style>
 
-<!-- Dodaj Firebase SDK -->
+<!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    <script>
+        // Firebase konfiguracija
         const firebaseConfig = {
             apiKey: "AIzaSyD0rhxbTPgznDvlWkJFkpkXDFXCiR-TJtU",
             authDomain: "mnozenjeigrica.firebaseapp.com",
@@ -153,16 +153,18 @@
             appId: "1:249351123551:web:acdb178650d28dd0bca1ea"
         };
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
+        // Inicijalizacija Firebase-a
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
     </script>
-  
 </head>
 <body>
 
+<!-- Sadržaj stranice -->
 <h1>Играjмо игрицу </br> -множење-</h1>
 <div class="message">Унесите своје име и разред, кликните на дугме "ПОЧНИ ИГРУ".</br>Имаш 60 секунди да сaкупиш што већи број поена, само 10 најболјих се приказује на листи! 
     Имаш безброј покушаја да будеш на листи најбољих.</br></br><b>СРЕЋНО!</b></div>
+
 <div id="inputSection">
     <label for="name">Унеси своје име и презиме: 
     <input type="text" id="name" required></br>
@@ -170,6 +172,8 @@
     <input type="text" id="grade" required></br>
     <button onclick="startGame()">Почни игру</button>
 </div>
+
+<!-- Tabela za množenje -->
 <div class="question" id="question">Колико је 1 x 1?</div>
 <table id="multiplicationTable">
     <thead>
@@ -183,6 +187,7 @@
         <!-- Redovi se generišu pomoću JavaScript-a -->
     </tbody>
 </table>
+
 <div class="feedback" id="feedback"></div>
 <div id="timer"></div>
 
@@ -202,7 +207,7 @@
 </table>
 
 <div class="message">Да бисте поново започели игру, освежите страницу!</b></div>
-    
+
 <script>
     const questionElement = document.getElementById('question');
     const feedbackElement = document.getElementById('feedback');
@@ -268,6 +273,18 @@
             <td>${correctAnswers}</td>
         `;
         scoreboardBody.appendChild(row);
+
+        // Save to Firebase
+        saveToFirebase(name, grade, correctAnswers);
+    }
+
+    function saveToFirebase(name, grade, correctAnswers) {
+        const newScoreRef = database.ref('scores').push();
+        newScoreRef.set({
+            name: name,
+            grade: grade,
+            correctAnswers: correctAnswers
+        });
     }
 
     function startGame() {
