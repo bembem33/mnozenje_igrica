@@ -139,51 +139,68 @@
 
 
     </style>
+
+<script type="module">
+    // Firebase konfiguracija
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD0rhxbTPgznDvlWkJFkpkXDFXCiR-TJtU",
+        authDomain: "mnozenjeigrica.firebaseapp.com",
+        databaseURL: "https://mnozenjeigrica-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "mnozenjeigrica",
+        storageBucket: "mnozenjeigrica.firebasestorage.app",
+        messagingSenderId: "249351123551",
+        appId: "1:249351123551:web:acdb178650d28dd0bca1ea"
+    };
+
+    // Inicijalizacija Firebase-a
+    const app = initializeApp(firebaseConfig);
+    console.log('Firebase uspešno inicijalizovan:', app);
+</script>
+
+
 </head>
 <body>
 
 <h1>Играjмо игрицу </br> -множење-</h1>
 <div class="message">Унесите своје име и разред, кликните на дугме "ПОЧНИ ИГРУ".</br>Имаш 60 секунди да сaкупиш што већи број поена, само 10 најбољих резултата се приказује на листи! 
     Имаш безброј покушаја да постигнеш најбоље резултате.</br></br><b>СРЕЋНО!</b></div>
-<div id="inputSection">
-    <label for="name">Унеси своје име и презиме: 
-    <input type="text" id="name" required></br>
-    <label for="grade">Унесите свој разред: </label>
-    <input type="text" id="grade" required></br>
-    <button onclick="startGame()">Почни игру</button>
-</div>
-<div class="question" id="question">Колико је 1 x 1?</div>
-<table id="multiplicationTable">
-    <thead>
-        <tr>
-            <th>&times;</th>
-            <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-            <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
-        </tr>
-    </thead>
-    <tbody>
-        <!-- Redovi se generišu pomoću JavaScript-a -->
-    </tbody>
-</table>
-<div class="feedback" id="feedback"></div>
-<div id="timer"></div>
-
-<h2>Ранг листа</h2>
-<table id="scoreboard">
-    <thead>
-        <tr>
-            <th>Ранг</th>
-            <th>Име</th>
-            <th>Разред</th>
-            <th>Број тачних одговора</th>
-        </tr>
-    </thead>
-    <tbody id="scoreboardBody">
-        <!-- Tabela sa rezultatima -->
-    </tbody>
-</table>
-
-<div class="message">Да бисте поново започели игру, освежите страницу!</b></div>
+    <div id="inputSection">
+        <label for="name">Унеси своје име и презиме:</label>
+        <input type="text" id="name" required><br>
+        <label for="grade">Унесите свој разред:</label>
+        <input type="text" id="grade" required><br>
+        <button onclick="startGame()">Почни игру</button>
+    </div>
+    <div class="question" id="question">Колико је 1 x 1?</div>
+    <table id="multiplicationTable">
+        <thead>
+            <tr>
+                <th>&times;</th>
+                <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+                <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Redovi generisani pomoću JavaScript-a -->
+        </tbody>
+    </table>
+    <div class="feedback" id="feedback"></div>
+    <div id="timer"></div>
+    <h2>Ранг листа</h2>
+    <table id="scoreboard">
+        <thead>
+            <tr>
+                <th>Ранг</th>
+                <th>Име</th>
+                <th>Разред</th>
+                <th>Број тачних одговора</th>
+            </tr>
+        </thead>
+        <tbody id="scoreboardBody"></tbody>
+    </table>
+    <div class="message">Да бисте поново започели игру, освежите страницу!</div>
     
 <script>
     const questionElement = document.getElementById('question');
