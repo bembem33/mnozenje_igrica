@@ -157,6 +157,45 @@
     // Inicijalizacija Firebase-a
     const app = initializeApp(firebaseConfig);
     console.log('Firebase uspešno inicijalizovan:', app);
+
+    // Funkcija za učitavanje rang liste iz Firebase-a
+    function loadScores() {
+        const scoresRef = ref(getDatabase(), 'scores');
+        get(scoresRef).then((snapshot) => {
+            const scores = snapshot.exists() ? snapshot.val() : [];
+            displayScores(scores);
+        }).catch((error) => {
+            console.error('Error loading scores:', error);
+        });
+    }
+
+    // Funkcija za prikazivanje rang liste
+    function displayScores(scores) {
+        scoreboardBody.innerHTML = '';
+        scores.forEach((score, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${index + 1}</td><td>${score.name}</td><td>${score.grade}</td><td>${score.correctAnswers}</td>`;
+            scoreboardBody.appendChild(row);
+        });
+    }
+
+    // Funkcija za ažuriranje rang liste u Firebase-u
+    function updateScoreboard() {
+        const scoresRef = ref(getDatabase(), 'scores');
+        get(scoresRef).then((snapshot) => {
+            const scores = snapshot.exists() ? snapshot.val() : [];
+            scores.push({ name, grade, correctAnswers });
+            scores.sort((a, b) => b.correctAnswers - a.correctAnswers);
+            if (scores.length > 10) scores.pop(); // Keep only top 10 scores
+            
+            set(ref(getDatabase(), 'scores'), scores);  // Saving to Firebase
+            displayScores(scores); // Updating on the webpage
+        }).catch((error) => {
+            console.error('Error reading scores:', error);
+        });
+    }
+
+    window.onload = loadScores;
 </script>
 
 
