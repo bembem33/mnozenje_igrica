@@ -204,25 +204,49 @@
         generateTask();
     }
 
-    function startTimer() {
-        let timeLeft = 60;
-        document.getElementById('timer').textContent = `Преостало време: ${timeLeft} секунди`;
-        timer = setInterval(() => {
-            timeLeft--;
-            document.getElementById('timer').textContent = `Преостало време: ${timeLeft} секунди`;
-            if (timeLeft <= 0) {
-                clearInterval(timer);
-                saveScore();
-                alert('Време је истекло!');
-            }
-        }, 1000);
+  function startGame() {
+    name = document.getElementById('name').value;
+    grade = document.getElementById('grade').value;
+    if (!name || !grade) {
+        alert('Молимо унесите и име и разред.');
+        return;
+    }
+    correctAnswers = 0;
+    startTimer();
+    generateTask();
+
+    // Omogućavanje klikova na ćelije
+    const cells = document.querySelectorAll('#multiplicationTable td');
+    cells.forEach(cell => {
+        cell.addEventListener('click', handleCellClick);
+    });
+}
+
+let currentRow, currentCol;
+
+function generateTask() {
+    currentRow = Math.floor(Math.random() * 10) + 1;
+    currentCol = Math.floor(Math.random() * 10) + 1;
+    document.getElementById('question').textContent = `Колико је ${currentRow} x ${currentCol}?`;
+}
+
+function handleCellClick(event) {
+    const clickedRow = parseInt(event.target.dataset.row, 10);
+    const clickedCol = parseInt(event.target.dataset.col, 10);
+
+    if (clickedRow === currentRow && clickedCol === currentCol) {
+        event.target.classList.add('darkened'); // Tačan odgovor
+        correctAnswers++;
+        document.getElementById('feedback').innerHTML = `<span class="smiley">🙂 Тачно!</span>`;
+    } else {
+        document.getElementById('feedback').innerHTML = `<span class="sad">😢 Нетачно. Пробај поново!</span>`;
     }
 
-    function generateTask() {
-        const row = Math.floor(Math.random() * 10) + 1;
-        const col = Math.floor(Math.random() * 10) + 1;
-        document.getElementById('question').textContent = `Колико је ${row} x ${col}?`;
-    }
+    setTimeout(() => {
+        document.getElementById('feedback').innerHTML = '';
+        generateTask();
+    }, 1000);
+}
 
     function saveScore() {
         push(scoresRef, { name, grade, correctAnswers });
