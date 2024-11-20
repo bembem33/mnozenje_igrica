@@ -160,12 +160,15 @@
     const db = getDatabase(app);
     console.log('Firebase uspešno inicijalizovan:', app);
 
+    const database = getDatabase(app);
+
     // Funkcija za učitavanje rang liste iz Firebase-a
     function loadScores() {
         const scoresRef = ref(db, 'scores'); // Ispravljen ref
         get(scoresRef).then((snapshot) => {
             if (snapshot.exists()) {
                 const scores = snapshot.val();
+                const scoresArray = Object.values(scores); // Pretvaranje objekta u niz
                 displayScores(scores);
             } else {
                 console.log('Nema podataka u bazi.');
@@ -178,9 +181,9 @@
 
     // Funkcija za ažuriranje rang liste u Firebase-u
     function updateScoreboard() {
-        const scoresRef = ref(db, 'scores');
+        const scoresRef = ref(database, 'scores');
         get(scoresRef).then((snapshot) => {
-            let scores = snapshot.exists() ? snapshot.val() : [];
+            let scores = snapshot.exists() ? Object.values(snapshot.val()) : [];
             scores.push({ name, grade, correctAnswers });
             scores.sort((a, b) => b.correctAnswers - a.correctAnswers);
             if (scores.length > 10) scores.pop(); // Zadržavanje samo 10 najboljih
