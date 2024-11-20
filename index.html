@@ -143,29 +143,56 @@
 <script type="module">
     // Firebase konfiguracija
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD0rhxbTPgznDvlWkJFkpkXDFXCiR-TJtU",
         authDomain: "mnozenjeigrica.firebaseapp.com",
         databaseURL: "https://mnozenjeigrica-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "mnozenjeigrica",
-        storageBucket: "mnozenjeigrica.firebasestorage.app",
+        storageBucket: "mnozenjeigrica.appspot.com",
         messagingSenderId: "249351123551",
         appId: "1:249351123551:web:acdb178650d28dd0bca1ea"
     };
 
     // Inicijalizacija Firebase-a
     const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
     console.log('Firebase uspešno inicijalizovan:', app);
 
     // Funkcija za učitavanje rang liste iz Firebase-a
     function loadScores() {
-        const scoresRef = ref(getDatabase(), 'scores');
+        const scoresRef = ref(db, 'scores'); // Ispravljen ref
         get(scoresRef).then((snapshot) => {
-            const scores = snapshot.exists() ? snapshot.val() : [];
-            displayScores(scores);
+            if (snapshot.exists()) {
+                const scores = snapshot.val();
+                displayScores(scores);
+            } else {
+                console.log('Nema podataka u bazi.');
+                displayScores([]); // Prikaz prazne tabele ako nema podataka
+            }
         }).catch((error) => {
-            console.error('Error loading scores:', error);
+            console.error('Greška pri učitavanju rang liste:', error);
+        });
+    }
+
+    // Funkcija za ažuriranje rang liste u Firebase-u
+    function updateScoreboard() {
+        const scoresRef = ref(db, 'scores');
+        get(scoresRef).then((snapshot) => {
+            let scores = snapshot.exists() ? snapshot.val() : [];
+            scores.push({ name, grade, correctAnswers });
+            scores.sort((a, b) => b.correctAnswers - a.correctAnswers);
+            if (scores.length > 10) scores.pop(); // Zadržavanje samo 10 najboljih
+
+            set(scoresRef, scores).then(() => {
+                console.log('Rang lista uspešno ažurirana.');
+                displayScores(scores);
+            }).catch((error) => {
+                console.error('Greška pri čuvanju podataka:', error);
+            });
+        }).catch((error) => {
+            console.error('Greška pri učitavanju rang liste:', error);
         });
     }
 
@@ -179,24 +206,9 @@
         });
     }
 
-    // Funkcija za ažuriranje rang liste u Firebase-u
-    function updateScoreboard() {
-        const scoresRef = ref(getDatabase(), 'scores');
-        get(scoresRef).then((snapshot) => {
-            const scores = snapshot.exists() ? snapshot.val() : [];
-            scores.push({ name, grade, correctAnswers });
-            scores.sort((a, b) => b.correctAnswers - a.correctAnswers);
-            if (scores.length > 10) scores.pop(); // Keep only top 10 scores
-            
-            set(ref(getDatabase(), 'scores'), scores);  // Saving to Firebase
-            displayScores(scores); // Updating on the webpage
-        }).catch((error) => {
-            console.error('Error reading scores:', error);
-        });
-    }
-
     window.onload = loadScores;
 </script>
+
 
 
 </head>
