@@ -165,7 +165,7 @@
     window.onload = function() {
     loadScores(); // Učitaj rezultate odmah kada se stranica učita
 };
-    
+        
     // Funkcija za učitavanje rang liste iz Firebase-a
     function loadScores() {
         const scoresRef = ref(database, 'scores'); // Ispravljen ref
@@ -173,7 +173,7 @@
             if (snapshot.exists()) {
                 const scores = snapshot.val();
                 const scoresArray = Object.values(scores); // Pretvaranje objekta u niz
-                displayScores(scores);
+                displayScores(scoresArray);
             } else {
                 console.log('Nema podataka u bazi.');
                 displayScores([]); // Prikaz prazne tabele ako nema podataka
@@ -213,6 +213,7 @@
         });
     }
 
+    
     
 </script>
 
