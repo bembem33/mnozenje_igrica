@@ -162,6 +162,10 @@
 
     const database = getDatabase(app);
 
+    window.onload = function() {
+    loadScores(); // Učitaj rezultate odmah kada se stranica učita
+};
+    
     // Funkcija za učitavanje rang liste iz Firebase-a
     function loadScores() {
         const scoresRef = ref(database, 'scores'); // Ispravljen ref
@@ -209,7 +213,7 @@
         });
     }
 
-    window.onload = loadScores;
+    
 </script>
 
 
