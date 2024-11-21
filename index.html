@@ -173,6 +173,8 @@
             if (snapshot.exists()) {
                 const scores = snapshot.val();
                 const scoresArray = Object.values(scores); // Pretvaranje objekta u niz
+                scoresArray.sort((a, b) => b.correctAnswers - a.correctAnswers); // Sortiranje rezultata po broju tačnih odgovora
+                scoresArray.splice(10); // Zadržavanje samo prvih 10 rezultata
                 displayScores(scoresArray);
             } else {
                 console.log('Nema podataka u bazi.');
