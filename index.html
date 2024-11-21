@@ -185,6 +185,21 @@
         });
     }
 
+    function saveScore(playerName, grade, correctAnswers) {
+    const scoresRef = ref(database, 'scores');
+    const newScoreRef = push(scoresRef); // Kreira novi jedinstveni zapis
+    set(newScoreRef, {
+        name: name,
+        grade: grade,
+        correctAnswers: correctAnswers
+    }).then(() => {
+        console.log('Rezultat je uspešno sačuvan.');
+    }).catch((error) => {
+        console.error('Greška pri čuvanju rezultata:', error);
+    });
+}
+
+
     // Funkcija za ažuriranje rang liste u Firebase-u
     function updateScoreboard() {
         const scoresRef = ref(database, 'scores');
